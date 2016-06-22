@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="CPP_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/Src/stm32f0xx_it.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Src/main.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Src/stm32f0xx_hal_msp.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Drivers/CMSIS/Device/ST/STM32F0xx/Source/Templates/system_stm32f0xx.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Drivers/CMSIS/Device/ST/STM32F0xx/Source/Templates/gcc/startup_stm32f042x6.s" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_i2c.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pwr.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_tim.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_rcc_ex.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pcd_ex.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_gpio.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_dma.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pwr_ex.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_tim_ex.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_i2c_ex.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_flash_ex.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_flash.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_rcc.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_cortex.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pcd.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/STM32F042x6.cmake" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/CMakeLists.txt" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/STM32F042F6Px_FLASH.ld" isTestSource="false" />
+    </content>
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module-library">
+      <library name="Header Search Paths">
+        <CLASSES />
+        <SOURCES />
+      </library>
+    </orderEntry>
+  </component>
+</module>
