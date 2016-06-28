@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(f1042_midi_interface)
+project(f1042-midi-interface)
 
 add_definitions(-DSTM32F042x6)
 
