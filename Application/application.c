@@ -4,7 +4,6 @@
 
 #include <app_task.h>
 #include "application.h"
-#include "../USB_MIDI/usbd_audio_midi.h"
 
 bool usb_connected = false;
 bool bus_connected = false;
@@ -46,8 +45,8 @@ APPLICATION {
 	STARTUP:
 	STATE_BEGIN
 			ENTER:
-				//application_init();
-				//config_load();
+				application_init();
+				config_load();
 				SWITCHTO(IDLE);
 	STATE_END
 
@@ -75,7 +74,7 @@ APPLICATION {
 	NORMAL:
 	STATE_BEGIN
 			ENTER:
-				led_set(LED_PURPLE, false);
+				led_blink(LED_BLUE, true, true);
 				break;
 
 			EVENT_TRACK_CONNECTION_CHANGE
@@ -256,15 +255,15 @@ void led_blink(enum led_e led, bool once, bool fast) {
 	_blinkDuration = fast ? 1 : 5;
 	_blinkDurationCount = 0;
 
-	//HAL_TIM_Base_Stop_IT(&htim1);
+	HAL_TIM_Base_Stop_IT(&htim1);
 	HAL_GPIO_WritePin(GPIOA, RED_Pin | BLUE_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(GPIOA, _led, GPIO_PIN_SET);
-	//HAL_TIM_Base_Start_IT(&htim1);
+	HAL_TIM_Base_Start_IT(&htim1);
 
 }
 
 void led_set(enum led_e led, bool on) {
-	//HAL_TIM_Base_Stop_IT(&htim1)
+	HAL_TIM_Base_Stop_IT(&htim1);
 	uint16_t l = (uint16_t) (((led & LED_RED) ? RED_Pin : 0) | ((led & LED_BLUE) ? BLUE_Pin : 0));
 	HAL_GPIO_WritePin(GPIOA, RED_Pin | BLUE_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(GPIOA, l, GPIO_PIN_SET);
@@ -366,15 +365,12 @@ void process_trigger(uint32_t midi) {
  */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	if (GPIO_Pin == BOOT_Pin) {
+		bool newState = (HAL_GPIO_ReadPin(BOOT_GPIO_Port, BOOT_Pin) == GPIO_PIN_SET);
 		long now = HAL_GetTick();
-		if (now - _buttonTimestamp > DEBOUNCE_DELAY_TICKS) {
-			bool newState = (HAL_GPIO_ReadPin(BOOT_GPIO_Port, BOOT_Pin) == GPIO_PIN_SET);
-			if (newState != _buttonState) {
-				_buttonState = newState;
-				app_pushevent(newState ? APP_BUTTON_BOOT_DOWN : APP_BUTTON_BOOT_UP);
-			}
+		if (newState && now - _buttonTimestamp > DEBOUNCE_DELAY_TICKS) {
+			app_pushevent(APP_BUTTON_BOOT_DOWN);
+			_buttonTimestamp = now;
 		}
-		_buttonTimestamp = now;
 	}
 }
 
@@ -403,7 +399,7 @@ void USBD_MIDI_ReceivedCallback(struct ringbuffer_s *midi_in_buffer) {
 
 	ringbuffer_getreadbuffer(midi_in_buffer, &chunk, &chunk_size);
 	// Echo back to host
-	USBD_MIDI_Transmit(chunk, chunk_size);
+	//USBD_MIDI_Transmit(chunk, chunk_size);
 
 	while (chunk_read < chunk_size) {
 		// Skip shit :)
@@ -418,4 +414,12 @@ void USBD_MIDI_ReceivedCallback(struct ringbuffer_s *midi_in_buffer) {
 		app_pushevent(APP_EVENT_MIDI | midi);
 	}
 	ringbuffer_read(midi_in_buffer, 0, chunk_size);
+}
+
+void usb_device_reset(uint8_t speed) {
+	application_connection_usb(true);
+}
+
+void usb_device_suspended() {
+	application_connection_usb(false);
 }

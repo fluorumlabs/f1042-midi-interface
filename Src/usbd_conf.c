@@ -72,7 +72,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef* pcdHandle)
     __HAL_RCC_USB_CLK_ENABLE();
 
     /* Peripheral interrupt init */
-    HAL_NVIC_SetPriority(USB_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(USB_IRQn, 3, 0);
     HAL_NVIC_EnableIRQ(USB_IRQn);
   /* USER CODE BEGIN USB_MspInit 1 */
 
@@ -197,10 +197,10 @@ void HAL_PCD_ResumeCallback(PCD_HandleTypeDef *hpcd)
 {
   /* USER CODE BEGIN 3 */
   if (hpcd->Init.low_power_enable)
-  {    
+  {
     /* Reset SLEEPDEEP bit of Cortex System Control Register */
-    SCB->SCR &= (uint32_t)~((uint32_t)(SCB_SCR_SLEEPDEEP_Msk | SCB_SCR_SLEEPONEXIT_Msk));   
-    SystemClockConfig_Resume(); 
+    SCB->SCR &= (uint32_t)~((uint32_t)(SCB_SCR_SLEEPDEEP_Msk | SCB_SCR_SLEEPONEXIT_Msk));
+    SystemClockConfig_Resume();
   }
   /* USER CODE END 3 */
   USBD_LL_Resume((USBD_HandleTypeDef*)hpcd->pData);
@@ -526,13 +526,13 @@ void HAL_PCDEx_SetConnectionState(PCD_HandleTypeDef *hpcd, uint8_t state)
   if (state == 1)
   {
     /* Configure Low Connection State */
-	
+
   }
   else
   {
     /* Configure High Connection State */
-   
-  } 
+
+  }
 /* USER CODE END 6 */
 }
 
