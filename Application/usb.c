@@ -127,3 +127,10 @@ void midi_callback() {
 
 }
 
+void usb_device_reset(uint8_t speed) {
+	application_connection_usb(true);
+}
+
+void usb_device_suspended() {
+	application_connection_usb(false);
+}

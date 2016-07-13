@@ -415,11 +415,3 @@ void USBD_MIDI_ReceivedCallback(struct ringbuffer_s *midi_in_buffer) {
 	}
 	ringbuffer_read(midi_in_buffer, 0, chunk_size);
 }
-
-void usb_device_reset(uint8_t speed) {
-	application_connection_usb(true);
-}
-
-void usb_device_suspended() {
-	application_connection_usb(false);
-}
