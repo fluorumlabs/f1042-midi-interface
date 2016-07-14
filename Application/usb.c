@@ -9,7 +9,7 @@
 #include <class_cdc.h>
 #include <usbd_def.h>
 
-void midi_callback();
+void midi_callback(struct ringbuffer_s *appbuffer);
 
 #include <usb_meta.h> //=== USB META BEGIN ===============================
 
@@ -81,11 +81,13 @@ CONFIGURATION(
 	)
 );
 
+#define APP_BUFFER_SIZE 256
+
 USB_BUFFER(EP1_RX, MAX_PACKET_SIZE);
 USB_BUFFER(EP1_TX, MAX_PACKET_SIZE);
 
-APP_BUFFER(BUFFER_MIDI_RX, MAX_PACKET_SIZE);
-APP_BUFFER(BUFFER_MIDI_TX, MAX_PACKET_SIZE);
+APP_BUFFER(BUFFER_MIDI_RX, APP_BUFFER_SIZE);
+APP_BUFFER(BUFFER_MIDI_TX, APP_BUFFER_SIZE);
 
 ENDPOINTS([1][TX] = ENDPOINT( EP1_TX, BUFFER_MIDI_TX, null),
 	  [1][RX] = ENDPOINT( EP1_RX, BUFFER_MIDI_RX, midi_callback),
@@ -97,40 +99,3 @@ INTERFACES([0] =        INTERFACE_AUDIO);
 #include <app_task.h>
 #include "application.h"
 
-void midi_callback() {
-	uint16_t chunk_size = ringbuffer_toread(&BUFFER_MIDI_RX);
-	uint16_t chunk_read = 0;
-	uint8_t *chunk;
-	uint32_t midi;
-	uint8_t midi_offset;
-
-	ringbuffer_getreadbuffer(&BUFFER_MIDI_RX, &chunk, &chunk_size);
-	// Echo back to host
-	ringbuffer_write(&BUFFER_MIDI_TX, chunk, chunk_size);
-	usb_flush(&BUFFER_MIDI_TX);
-
-	if (chunk_size != 0) {
-		while (chunk_read < chunk_size) {
-			// Skip shit :)
-			while (chunk_read < chunk_size && (chunk[chunk_read] & 0x80) != 0x80) chunk_read++;
-			midi_offset = 0;
-			midi = 0;
-			while (chunk_read < chunk_size && (chunk[chunk_read] & 0x80) != 0x80 && midi_offset < 24) {
-				midi |= chunk[chunk_read++] << midi_offset;
-				midi_offset += 8;
-			}
-			// Now we should have our midi command
-			app_pushevent(APP_EVENT_MIDI | midi);
-		}
-	}
-	ringbuffer_read(&BUFFER_MIDI_RX, 0, chunk_size);
-
-}
-
-void usb_device_reset(uint8_t speed) {
-	application_connection_usb(true);
-}
-
-void usb_device_suspended() {
-	application_connection_usb(false);
-}

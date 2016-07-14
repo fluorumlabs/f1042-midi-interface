@@ -33,10 +33,9 @@
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __MXCONSTANT_H
 #define __MXCONSTANT_H
-  /* Includes ------------------------------------------------------------------*/
+/* Includes ------------------------------------------------------------------*/
 
 /* USER CODE BEGIN Includes */
-
 /* USER CODE END Includes */
 
 /* Private define ------------------------------------------------------------*/
@@ -47,19 +46,25 @@
 #define RED_GPIO_Port GPIOA
 #define BLUE_Pin GPIO_PIN_1
 #define BLUE_GPIO_Port GPIOA
+#define OUT_Pin GPIO_PIN_2
+#define OUT_GPIO_Port GPIOA
 #define MODE_Pin GPIO_PIN_3
 #define MODE_GPIO_Port GPIOA
 /* USER CODE BEGIN Private defines */
+#define I2C_ADDRESS 252
 
+/* Monkey patching :D Proper PCD_WritePMA is implemented in Protoplasm/usbdevice/platform.c */
+//#pragma weak PCD_WritePMA
+//#define REPLACE_PCD_WritePMA
 /* USER CODE END Private defines */
 
 /**
   * @}
-  */ 
+  */
 
 /**
   * @}
-*/ 
+*/
 
 #endif /* __MXCONSTANT_H */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

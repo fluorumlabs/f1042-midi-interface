@@ -12,7 +12,7 @@ CMAKE_FORCE_C_COMPILER(arm-none-eabi-gcc GNU)
 CMAKE_FORCE_CXX_COMPILER(arm-none-eabi-g++ GNU)
 
 SET(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/STM32F042F6Px_FLASH.ld)
-SET(COMMON_FLAGS "-mcpu=cortex-m0 -mthumb -mfloat-abi=soft -ffunction-sections -fstrict-aliasing -fno-exceptions -fomit-frame-pointer -fdata-sections")
+SET(COMMON_FLAGS "-mcpu=cortex-m0 -mthumb -ffunction-sections -fstrict-aliasing -fno-exceptions -fomit-frame-pointer -fdata-sections -Wall")
 #SET(COMMON_FLAGS "-mcpu=cortex-m4 -mthumb -mthumb-interwork -mfloat-abi=hard -mfpu=fpv4-sp-d16 -ffunction-sections -fdata-sections -g -fno-common -fmessage-length=0")
 SET(CMAKE_CXX_FLAGS "${COMMON_FLAGS} -std=c++11 -fshort-wchar")
 SET(CMAKE_C_FLAGS "${COMMON_FLAGS} -std=gnu99 -fshort-wchar")

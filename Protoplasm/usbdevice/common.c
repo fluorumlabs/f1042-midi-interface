@@ -270,7 +270,7 @@ uint8_t _usb_class_dataout(USBD_HandleTypeDef *pdev, uint8_t epnum) {
 	USBD_LL_PrepareReceive(pdev, epnum | USB_HOST2DEVICE, ep->usbbuffer,
 			       ep->packetsize);
 
-	invoke(ep->callback)();
+	invoke(ep->callback)(ep->appbuffer);
 
 	return USBD_OK;
 }
@@ -306,19 +306,19 @@ uint8_t *_usb_class_getdevicequalifierdescriptor(uint16_t *length) {
 	return (uint8_t *) null;
 }
 
-__weak void usb_device_init(void) { }
+__weak void usb_device_init_callback(void) { }
 
-__weak void usb_device_reset(uint8_t speed) { }
+__weak void usb_device_reset_callback(void) { }
 
-__weak void usb_device_configured(void) { }
+__weak void usb_device_configured_callback(void) { }
 
-__weak void usb_device_suspended(void) { }
+__weak void usb_device_suspended_callback(void) { }
 
-__weak void usb_device_resumed(void) { }
+__weak void usb_device_resumed_callback(void) { }
 
-__weak void usb_device_connected(void) { }
+__weak void usb_device_connected_callback(void) { }
 
-__weak void usb_device_disconnected(void) { }
+__weak void usb_device_disconnected_callback(void) { }
 
 USBD_ClassTypeDef _usb_class_callbacks = {
 	_usb_class_init,

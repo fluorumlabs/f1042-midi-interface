@@ -3,16 +3,23 @@
 //
 
 #include <app_task.h>
+#include <stm32f0xx_hal.h>
+#include <ringbuffer.h>
+#include <uart.h>
+#include <i2c.h>
 #include "application.h"
+#include "io.h"
+#include "midi.h"
+#include "process.h"
+
+extern UART_HandleTypeDef huart2;
+extern I2C_HandleTypeDef hi2c1;
 
 bool usb_connected = false;
 bool bus_connected = false;
+bool was_usb_connected = false;
 
-enum operation_mode_e {
-    OPERATION_MIDI_THRU = 0,
-    OPERATION_SYNTH = 1,
-    OPERATION_TRIGGER = 2
-} operation_mode = OPERATION_MIDI_THRU;
+enum operation_mode_e operation_mode = OPERATION_MIDI_THRU;
 
 // MIDI Filter
 uint16_t channelMask = 0xffff;
@@ -20,14 +27,25 @@ bool range = false;
 uint8_t noteMin = 0;
 uint8_t noteMax = 255;
 
-#define DEBOUNCE_DELAY_TICKS 100
+uint8_t keyDowns = 0;
+
+bool normal = false;
+
+void midi_callback(struct ringbuffer_s *appbuffer);
+
+UART_BUFFER(UART_MIDI_TX, 64);
+UART_DEFINE({ &huart2, &UART_MIDI_TX });
+
+I2C_BUFFER(I2C_MIDI_TX, 64);
+I2C_BUFFER(I2C_MIDI_RX, 64);
+I2C_DEFINE({ &hi2c1, &I2C_MIDI_TX, &I2C_MIDI_RX, midi_callback });
 
 #include <app_task_meta.h> //=== APP META BEGIN ===============================
 
 #define EVENT_TRACK_CONNECTION_CHANGE                                          \
         EVENT(APP_EVENT_CONNECTION_STATUS_CHANGE):                             \
                 if (usb_connected ^ bus_connected) {                           \
-                        SWITCHTO(NORMAL);                                      \
+                        SWITCHTO(CONNECTED);                                   \
                 }                                                              \
                 if (!(usb_connected | bus_connected)) {                        \
                         SWITCHTO(IDLE);                                        \
@@ -40,6 +58,10 @@ uint8_t noteMax = 255;
 APPLICATION {
 	// Global variables
 	uint32_t midi;
+	uint32_t tick = 0;
+	uint32_t newTick = 0;
+	uint8_t cmdDetect = MIDI_ACTIVE_SENSE;
+	uint8_t cmdAbort = MIDI_RESERVED_FD;
 
 	// Initialization
 	STARTUP:
@@ -54,6 +76,18 @@ APPLICATION {
 	IDLE:
 	STATE_BEGIN
 			ENTER:
+				process_synth_noteoff();
+				normal = false;
+				if (was_usb_connected) {
+					led_set(LED_RED, true);
+					ringbuffer_write(&I2C_MIDI_TX, &cmdAbort, 1);
+					i2c_flush(&I2C_MIDI_TX);
+					HAL_Delay(1000);
+				}
+				// Reset I2C and go slave
+				i2c_abort(&hi2c1);
+				i2c_start(&I2C_MIDI_RX);
+				led_set(LED_BLUE, false);
 				led_blink(LED_RED, false, false);
 				break;
 
@@ -64,17 +98,40 @@ APPLICATION {
 	ERROR:
 	STATE_BEGIN
 			ENTER:
+				// Reset I2C
+				process_synth_noteoff();
+				led_set(LED_BLUE, false);
 				led_blink(LED_RED, false, true);
 				break;
 
 			EVENT_TRACK_CONNECTION_CHANGE
 	STATE_END
 
+	// Just connected
+	CONNECTED:
+	STATE_BEGIN
+			ENTER:
+				led_set(LED_RED, false);
+				led_blink(LED_BLUE, true, true);
+				if (usb_connected && !bus_connected) {
+					// Reset I2C and go master
+					i2c_abort(&hi2c1);
+					ringbuffer_write(&I2C_MIDI_TX, &cmdDetect, 1);
+					i2c_flush(&I2C_MIDI_TX);
+					was_usb_connected = true;
+				}
+
+				SWITCHTO(NORMAL);
+	STATE_END
+
 	// Normal mode: Receive and process MIDI
 	NORMAL:
 	STATE_BEGIN
 			ENTER:
-				led_blink(LED_BLUE, true, true);
+				normal = true;
+				process_synth_noteoff();
+
+				led_set(LED_RED, false);
 				break;
 
 			EVENT_TRACK_CONNECTION_CHANGE
@@ -85,17 +142,14 @@ APPLICATION {
 				    MIDI_COMMAND(midi) <= MIDI_COMMAND_LAST) {
 					// Normal command
 					int channel = 1 << MIDI_CHANNEL(midi);
-					if (channel & channelMask == channel) {
+					if ((channel & channelMask) == channel) {
 						if (operation_mode == OPERATION_MIDI_THRU) {
-							//led_blink(range ? LED_PURPLE : LED_BLUE, true, true);
 							process_midi_thru(midi);
 						} else if (operation_mode == OPERATION_SYNTH) {
 							if ((MIDI_COMMAND(midi) == MIDI_NOTE_ON ||
 							     MIDI_COMMAND(midi) == MIDI_NOTE_OFF) &&
 							    (MIDI_DATA0(midi) >= noteMin &&
 							     MIDI_DATA1(midi) <= noteMax)) {
-								//led_blink(range ? LED_PURPLE : LED_BLUE, true,
-								//true);
 								process_synth(midi);
 							}
 						} else if (operation_mode == OPERATION_TRIGGER) {
@@ -103,14 +157,12 @@ APPLICATION {
 							     MIDI_COMMAND(midi) == MIDI_NOTE_OFF) &&
 							    (MIDI_DATA0(midi) >= noteMin &&
 							     MIDI_DATA1(midi) <= noteMax)) {
-								//led_blink(range ? LED_PURPLE : LED_BLUE, true,
-								//true);
 								process_trigger(midi);
 							}
 						}
 					}
 				} else if (operation_mode == OPERATION_MIDI_THRU) {
-					// RT command
+					// Other command
 					process_midi_thru(midi);
 				}
 				break;
@@ -124,18 +176,33 @@ APPLICATION {
 	LEARN_CLEAR:
 	STATE_BEGIN
 			ENTER:
-				noteMin = 0;
-				noteMax = 255;
-				channelMask = 0xff;
-				range = false;
-
+				// If state entered second time in less than 1 second, clear configuration
+				newTick = HAL_GetTick();
+				if (tick > 0 && newTick - tick < 1000) {
+					noteMin = 0;
+					noteMax = 255;
+					channelMask = 0xff;
+					range = false;
+					keyDowns = 0;
+				}
+				tick = newTick;
+				normal = false;
 				led_set(LED_RED, true);
+				led_set(LED_BLUE, false);
+				process_synth_noteoff();
 				break;
 
 			EVENT_TRACK_CONNECTION_CHANGE
 
 			EVENT(APP_EVENT_MIDI):
+				// Clear config on first event
 				midi = EVENT_VALUE;
+				noteMin = 0;
+				noteMax = 255;
+				channelMask = 0xff;
+				range = false;
+				process_synth_noteoff();
+
 				if (operation_mode == OPERATION_MIDI_THRU &&
 				    MIDI_COMMAND(midi) >= MIDI_COMMAND_FIRST &&
 				    MIDI_COMMAND(midi) <= MIDI_COMMAND_LAST) {
@@ -172,7 +239,7 @@ APPLICATION {
 	LEARN:
 	STATE_BEGIN
 			ENTER:
-				//led_set(LED_BLUE, true);
+				led_set(LED_BLUE, true);
 				break;
 
 			EVENT_TRACK_CONNECTION_CHANGE
@@ -183,7 +250,7 @@ APPLICATION {
 				    MIDI_COMMAND(midi) >= MIDI_COMMAND_FIRST &&
 				    MIDI_COMMAND(midi) <= MIDI_COMMAND_LAST) {
 					uint16_t channel = (uint16_t) (1 << MIDI_CHANNEL(midi));
-					if (channel & channelMask == 0) {
+					if ((channel & channelMask) == 0) {
 						channelMask |=
 							channel;
 						range = true;
@@ -195,7 +262,7 @@ APPLICATION {
 					   MIDI_COMMAND(midi) == MIDI_NOTE_OFF) {
 					uint16_t channel = (uint16_t) (1 << MIDI_CHANNEL(midi));
 					uint8_t note = (uint8_t) MIDI_DATA0(midi);
-					if ((channel & channelMask == channel) &&
+					if (((channel & channelMask) == channel) &&
 					    (note < noteMin || note > noteMax)) {
 						noteMin = min(noteMin, note);
 						noteMax = max(noteMax, note);
@@ -228,47 +295,22 @@ APPLICATION {
 }
 
 #include <app_task_meta.h> //==================================================
-#include <stm32f0xx_hal_conf.h>
-#include <stm32f0xx_hal.h>
-#include <ringbuffer.h>
+#include <common.h>
+
+
+void usb_device_reset_callback() {
+	application_connection_usb(true);
+	midi_reset();
+}
+
+void usb_device_suspended_callback() {
+	application_connection_usb(false);
+}
+
 
 uint32_t *flash_configuration = ((uint32_t *) (FLASH_BANK1_END + 1 - FLASH_PAGE_SIZE));
 uint32_t local_configuration[2];
 #define CONFIGURATION_SANITY_MARKER 0xF00FC7C8U
-
-extern TIM_HandleTypeDef htim1;
-
-// Internal
-long _buttonTimestamp = 0;
-bool _buttonState = false;
-
-int _blinkCount = 0;
-int _blinkDuration = 0;
-int _blinkDurationCount = 0;
-
-uint16_t _led;
-
-void led_blink(enum led_e led, bool once, bool fast) {
-	_led = (uint16_t) (((led & LED_RED) ? RED_Pin : 0) | ((led & LED_BLUE) ? BLUE_Pin : 0));
-
-	_blinkCount = once ? 1 : 100;
-	_blinkDuration = fast ? 1 : 5;
-	_blinkDurationCount = 0;
-
-	HAL_TIM_Base_Stop_IT(&htim1);
-	HAL_GPIO_WritePin(GPIOA, RED_Pin | BLUE_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOA, _led, GPIO_PIN_SET);
-	HAL_TIM_Base_Start_IT(&htim1);
-
-}
-
-void led_set(enum led_e led, bool on) {
-	HAL_TIM_Base_Stop_IT(&htim1);
-	uint16_t l = (uint16_t) (((led & LED_RED) ? RED_Pin : 0) | ((led & LED_BLUE) ? BLUE_Pin : 0));
-	HAL_GPIO_WritePin(GPIOA, RED_Pin | BLUE_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOA, l, GPIO_PIN_SET);
-}
-
 
 /*
  * Configure operation mode
@@ -295,6 +337,19 @@ void application_init() {
 	if (readUp && !readDown) operation_mode = OPERATION_MIDI_THRU;     // Floating
 	if (!readUp && !readDown) operation_mode = OPERATION_SYNTH;        // Tied to GND
 	if (readUp && readDown) operation_mode = OPERATION_TRIGGER;        // Tied to VCC
+
+	if (operation_mode != OPERATION_MIDI_THRU) {
+		// Kill the uart if we are in the wrong mode :)
+		HAL_UART_DeInit(&huart2);
+	}
+	if (operation_mode == OPERATION_TRIGGER || operation_mode == OPERATION_SYNTH) {
+		// Init OUT_Pin for gate or trigger
+		GPIO_InitStruct.Pin = OUT_Pin;
+		GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+		GPIO_InitStruct.Pull = GPIO_NOPULL;
+		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+		HAL_GPIO_Init(OUT_GPIO_Port, &GPIO_InitStruct);
+	}
 }
 
 void application_connection_usb(bool connected) {
@@ -348,70 +403,3 @@ void config_store() {
 	}
 }
 
-void process_midi_thru(uint32_t midi) {
-	// TODO Implementation
-}
-
-void process_synth(uint32_t midi) {
-	// TODO Implementation
-}
-
-void process_trigger(uint32_t midi) {
-	// TODO Implementation
-}
-
-/*
- * Interrupt handlers
- */
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-	if (GPIO_Pin == BOOT_Pin) {
-		bool newState = (HAL_GPIO_ReadPin(BOOT_GPIO_Port, BOOT_Pin) == GPIO_PIN_SET);
-		long now = HAL_GetTick();
-		if (newState && now - _buttonTimestamp > DEBOUNCE_DELAY_TICKS) {
-			app_pushevent(APP_BUTTON_BOOT_DOWN);
-			_buttonTimestamp = now;
-		}
-	}
-}
-
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-	unused htim;
-
-	_blinkDurationCount++;
-	if (_blinkDurationCount >= _blinkDuration) {
-		_blinkDurationCount = 0;
-		_blinkCount = (_blinkCount >= 100) ? 100 : _blinkCount - 1;
-		if (_blinkCount == 0) {
-			HAL_GPIO_WritePin(GPIOA, _led, GPIO_PIN_RESET);
-			HAL_TIM_Base_Stop_IT(&htim1);
-		} else {
-			HAL_GPIO_TogglePin(GPIOA, _led);
-		}
-	}
-}
-
-void USBD_MIDI_ReceivedCallback(struct ringbuffer_s *midi_in_buffer) {
-	uint16_t chunk_size;
-	uint16_t chunk_read = 0;
-	uint8_t *chunk;
-	uint32_t midi;
-	uint8_t midi_offset;
-
-	ringbuffer_getreadbuffer(midi_in_buffer, &chunk, &chunk_size);
-	// Echo back to host
-	//USBD_MIDI_Transmit(chunk, chunk_size);
-
-	while (chunk_read < chunk_size) {
-		// Skip shit :)
-		while (chunk_read < chunk_size && (chunk[chunk_read] & 0x80) != 0x80) chunk_read++;
-		midi_offset = 0;
-		midi = 0;
-		while (chunk_read < chunk_size && (chunk[chunk_read] & 0x80) != 0x80 && midi_offset < 24) {
-			midi |= chunk[chunk_read++] << midi_offset;
-			midi_offset += 8;
-		}
-		// Now we should have our midi command
-		app_pushevent(APP_EVENT_MIDI | midi);
-	}
-	ringbuffer_read(midi_in_buffer, 0, chunk_size);
-}

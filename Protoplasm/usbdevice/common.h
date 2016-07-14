@@ -285,26 +285,26 @@ struct usb_endpoint_s {
     */
     uint8_t *usbbuffer;
 
-    void ( *callback )();
+    void ( *callback )(struct ringbuffer_s *appbuffer);
 };
 
 
 #endif
 
 
-void usb_device_init(void);
+void usb_device_init_callback(void);
 
-void usb_device_reset(uint8_t speed);
+void usb_device_reset_callback(void);
 
-void usb_device_configured(void);
+void usb_device_configured_callback(void);
 
-void usb_device_suspended(void);
+void usb_device_suspended_callback(void);
 
-void usb_device_resumed(void);
+void usb_device_resumed_callback(void);
 
-void usb_device_connected(void);
+void usb_device_connected_callback(void);
 
-void usb_device_disconnected(void);
+void usb_device_disconnected_callback(void);
 
 #endif // USBCOMMON_H
 

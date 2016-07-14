@@ -9,13 +9,13 @@
       <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_i2c.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_dma.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_tim.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_uart.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_uart_ex.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_rcc_ex.c" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_uart.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pcd_ex.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_gpio.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_tim_ex.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pwr_ex.c" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pcd_ex.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_i2c_ex.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_flash_ex.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_flash.c" isTestSource="false" />
@@ -28,6 +28,15 @@
       <sourceFolder url="file://$MODULE_DIR$/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ctlreq.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_core.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Inc" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Protoplasm/uart/uart.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Protoplasm/uart/uart.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Protoplasm/i2c/i2c.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Protoplasm/i2c/i2c.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Protoplasm/lowlevel/ringbuffer.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Protoplasm/lowlevel/util.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Protoplasm/lowlevel/syscalls.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Protoplasm/lowlevel/ringbuffer.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Protoplasm/lowlevel/util.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Protoplasm/protoplasm/app_task.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Protoplasm/protoplasm/app_task.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Protoplasm/usbdevice/descriptor.h" isTestSource="false" />
@@ -39,15 +48,16 @@
       <sourceFolder url="file://$MODULE_DIR$/Protoplasm/usbdevice/common.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Protoplasm/usbdevice/class_cdc.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Protoplasm/usbdevice/common.c" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/Protoplasm/lowlevel/ringbuffer.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/Protoplasm/lowlevel/util.c" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/Protoplasm/lowlevel/syscalls.c" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/Protoplasm/lowlevel/ringbuffer.c" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/Protoplasm/lowlevel/util.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/CMakeLists.txt" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/Application/application.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Application/process.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Application/io.c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Application/application.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Application/process.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Application/midi.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Application/usb.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Application/application.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Application/midi.c" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Application/io.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/STM32F042F6Px_FLASH.ld" isTestSource="false" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />

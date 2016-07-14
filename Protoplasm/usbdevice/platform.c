@@ -88,7 +88,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *pcdHandle) {
 
 		/* USER CODE END USB_MspInit 1 */
 	}
-	usb_device_init();
+	usb_device_init_callback();
 }
 
 void HAL_PCD_MspDeInit(PCD_HandleTypeDef *pcdHandle) {
@@ -158,7 +158,7 @@ void HAL_PCD_ResetCallback(PCD_HandleTypeDef *hpcd) {
 	/*Reset Device*/
 	USBD_LL_Reset((USBD_HandleTypeDef *) hpcd->pData);
 
-	usb_device_reset(speed);
+	usb_device_reset_callback();
 }
 
 /**
@@ -177,7 +177,7 @@ void HAL_PCD_SuspendCallback(PCD_HandleTypeDef *hpcd) {
 		SCB->SCR |= (uint32_t) ((uint32_t) (SCB_SCR_SLEEPDEEP_Msk | SCB_SCR_SLEEPONEXIT_Msk));
 	}
 	/* USER CODE END 2 */
-	usb_device_suspended();
+	usb_device_suspended_callback();
 }
 
 /**
@@ -195,7 +195,7 @@ void HAL_PCD_ResumeCallback(PCD_HandleTypeDef *hpcd) {
 	}
 	/* USER CODE END 3 */
 	USBD_LL_Resume((USBD_HandleTypeDef *) hpcd->pData);
-	usb_device_resumed();
+	usb_device_resumed_callback();
 
 }
 
@@ -226,7 +226,7 @@ void HAL_PCD_ISOINIncompleteCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum) {
   */
 void HAL_PCD_ConnectCallback(PCD_HandleTypeDef *hpcd) {
 	USBD_LL_DevConnected((USBD_HandleTypeDef *) hpcd->pData);
-	usb_device_connected();
+	usb_device_connected_callback();
 }
 
 /**
@@ -236,7 +236,7 @@ void HAL_PCD_ConnectCallback(PCD_HandleTypeDef *hpcd) {
   */
 void HAL_PCD_DisconnectCallback(PCD_HandleTypeDef *hpcd) {
 	USBD_LL_DevDisconnected((USBD_HandleTypeDef *) hpcd->pData);
-	usb_device_disconnected();
+	usb_device_disconnected_callback();
 }
 
 
@@ -492,5 +492,22 @@ void HAL_PCDEx_SetConnectionState(PCD_HandleTypeDef *hpcd, uint8_t state) {
 	}
 /* USER CODE END 6 */
 }
+
+#ifdef REPLACE_PCD_WritePMA
+
+#pragma strong PCD_WritePMA
+void PCD_WritePMA(USB_TypeDef *USBx, uint8_t *pbUsrBuf, uint16_t wPMABufAddr, uint16_t wNBytes) {
+	int n = (wNBytes + 1) >> 1;   // n = (wNBytes + 1) / 2
+	__IO uint32_t *pdwVal = (uint32_t *) (wPMABufAddr * 2 + (uint32_t) USBx + 0x400);
+	uint16_t *pwUsrBuf = (uint16_t *) pbUsrBuf;
+	for (; n != 0; n--) {
+		*pdwVal = *pwUsrBuf;
+		pwUsrBuf++;
+		pdwVal++;
+	}
+}
+
+#endif
+
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
