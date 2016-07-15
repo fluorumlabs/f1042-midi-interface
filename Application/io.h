@@ -19,6 +19,8 @@ enum gpio_e {
 
 void led_blink(enum led_e led, bool once, bool fast);
 
+void led_stopblink();
+
 void led_set(enum led_e led, bool on);
 
 void gpio_blink(enum gpio_e led);

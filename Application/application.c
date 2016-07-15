@@ -113,6 +113,7 @@ APPLICATION {
 	STATE_BEGIN
 			ENTER:
 				led_set(LED_RED, false);
+				led_stopblink();
 				if (usb_connected && !bus_connected) {
 					// Reset I2C and go master
 					set_i2c_pullups(true);
@@ -132,6 +133,7 @@ APPLICATION {
 				learning = false;
 				process_synth_noteoff();
 
+				led_blink(LED_RED, true, false);
 				led_set(LED_RED, false);
 				break;
 
@@ -294,7 +296,6 @@ void usb_device_suspended_callback() {
 	application_connection_usb(false);
 }
 
-
 uint32_t *flash_configuration = ((uint32_t *) (FLASH_BANK1_END + 1 - FLASH_PAGE_SIZE));
 uint32_t local_configuration[2];
 #define CONFIGURATION_SANITY_MARKER 0xF00FC7C8U
@@ -383,8 +384,10 @@ void config_store() {
 		eraseInitTypeDef.NbPages = 1;
 
 		if (HAL_FLASHEx_Erase(&eraseInitTypeDef, &pageError) == HAL_OK) {
-			HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, (uint32_t) flash_configuration,
-					  (uint32_t) local_configuration);
+			HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, (uint32_t) &flash_configuration[0],
+					  local_configuration[0]);
+			HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, (uint32_t) &flash_configuration[1],
+					  local_configuration[1]);
 		}
 		HAL_FLASH_Lock();
 	}

@@ -37,6 +37,11 @@ void led_blink(enum led_e led, bool once, bool fast) {
 
 }
 
+void led_stopblink() {
+	HAL_TIM_Base_Stop_IT(&htim1);
+}
+
+
 void led_set(enum led_e led, bool on) {
 	uint16_t l = (uint16_t) (((led & LED_RED) ? RED_Pin : 0) | ((led & LED_BLUE) ? BLUE_Pin : 0));
 	HAL_GPIO_WritePin(GPIOA, l, on ? GPIO_PIN_SET : GPIO_PIN_RESET);

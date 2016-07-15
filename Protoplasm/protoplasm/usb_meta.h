@@ -160,7 +160,7 @@
 			) );
 	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-#define CONFIGURATION(...) const usb_descriptor_t _usb_configuration_descriptor =  { __VA_ARGS__ }; const uint16_t _usb_configuration_size = sizeof( _usb_configuration_descriptor )
+#define CONFIGURATION(...) usb_descriptor_t _usb_configuration_descriptor =  { __VA_ARGS__ }; uint16_t _usb_configuration_size = sizeof( _usb_configuration_descriptor )
 
 /**
 	Declare USB receiver/transmitter buffer
