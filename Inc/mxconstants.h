@@ -42,6 +42,10 @@
 
 #define BOOT_Pin GPIO_PIN_8
 #define BOOT_GPIO_Port GPIOB
+#define SDA_Pin GPIO_PIN_0
+#define SDA_GPIO_Port GPIOF
+#define SCL_Pin GPIO_PIN_1
+#define SCL_GPIO_Port GPIOF
 #define RED_Pin GPIO_PIN_0
 #define RED_GPIO_Port GPIOA
 #define BLUE_Pin GPIO_PIN_1

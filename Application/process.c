@@ -11,7 +11,7 @@
 // Created by Artem Godin on 14/07/16.
 //
 extern uint8_t keyDowns;
-extern bool normal;
+extern bool learning;
 extern enum operation_mode_e operation_mode;
 
 extern struct ringbuffer_s UART_MIDI_TX;
@@ -26,7 +26,10 @@ void process_synth_noteoff() {
 void process_midi(uint32_t midi) {
 	if (MIDI_COMMAND(midi) == MIDI_NOTE_ON) {
 		keyDowns++;
-		if (normal) {
+		if (learning) {
+			led_set(LED_RED, true);
+			led_blink(LED_BLUE, true, true);
+		} else {
 			led_set(LED_BLUE, true);
 			led_blink(LED_RED, true, true);
 		}
@@ -34,8 +37,8 @@ void process_midi(uint32_t midi) {
 		if (keyDowns > 0) {
 			keyDowns--;
 		}
-		if (keyDowns == 0 && normal) {
-			led_set(LED_BLUE, false);
+		if (keyDowns == 0) {
+			led_set(learning ? LED_RED : LED_BLUE, false);
 		}
 	}
 }

@@ -17,21 +17,20 @@ extern I2C_HandleTypeDef hi2c1;
 
 bool usb_connected = false;
 bool bus_connected = false;
-bool was_usb_connected = false;
+bool bus_master = false;
 
 enum operation_mode_e operation_mode = OPERATION_MIDI_THRU;
 
 // MIDI Filter
 uint16_t channelMask = 0xffff;
-bool range = false;
 uint8_t noteMin = 0;
 uint8_t noteMax = 255;
 
 uint8_t keyDowns = 0;
 
-bool normal = false;
+bool learning = false;
 
-void midi_callback(struct ringbuffer_s *appbuffer);
+void set_i2c_pullups(bool on);
 
 UART_BUFFER(UART_MIDI_TX, 64);
 UART_DEFINE({ &huart2, &UART_MIDI_TX });
@@ -77,14 +76,16 @@ APPLICATION {
 	STATE_BEGIN
 			ENTER:
 				process_synth_noteoff();
-				normal = false;
-				if (was_usb_connected) {
+				learning = false;
+				if (bus_master) {
 					led_set(LED_RED, true);
 					ringbuffer_write(&I2C_MIDI_TX, &cmdAbort, 1);
 					i2c_flush(&I2C_MIDI_TX);
 					HAL_Delay(1000);
 				}
 				// Reset I2C and go slave
+				bus_master = false;
+				set_i2c_pullups(false);
 				i2c_abort(&hi2c1);
 				i2c_start(&I2C_MIDI_RX);
 				led_set(LED_BLUE, false);
@@ -114,10 +115,11 @@ APPLICATION {
 				led_set(LED_RED, false);
 				if (usb_connected && !bus_connected) {
 					// Reset I2C and go master
+					set_i2c_pullups(true);
 					i2c_abort(&hi2c1);
 					ringbuffer_write(&I2C_MIDI_TX, &cmdDetect, 1);
 					i2c_flush(&I2C_MIDI_TX);
-					was_usb_connected = true;
+					bus_master = true;
 				}
 
 				SWITCHTO(NORMAL);
@@ -127,7 +129,7 @@ APPLICATION {
 	NORMAL:
 	STATE_BEGIN
 			ENTER:
-				normal = true;
+				learning = false;
 				process_synth_noteoff();
 
 				led_set(LED_RED, false);
@@ -181,13 +183,10 @@ APPLICATION {
 					noteMin = 0;
 					noteMax = 255;
 					channelMask = 0xff;
-					range = false;
 					keyDowns = 0;
 				}
 				tick = newTick;
-				normal = false;
-				led_set(LED_RED, true);
-				led_set(LED_BLUE, false);
+				learning = true;
 				process_synth_noteoff();
 				break;
 
@@ -196,17 +195,14 @@ APPLICATION {
 			EVENT(APP_EVENT_MIDI):
 				// Clear config on first event
 				midi = EVENT_VALUE;
-				noteMin = 0;
-				noteMax = 255;
-				channelMask = 0xff;
-				range = false;
 				process_synth_noteoff();
 
 				if (operation_mode == OPERATION_MIDI_THRU &&
 				    MIDI_COMMAND(midi) >= MIDI_COMMAND_FIRST &&
 				    MIDI_COMMAND(midi) <= MIDI_COMMAND_LAST) {
 					uint16_t channel = (uint16_t) (1 << MIDI_CHANNEL(midi));
-					range = false;
+					noteMin = 0;
+					noteMax = 255;
 					channelMask = channel;
 					process_midi_thru(midi);
 					SWITCHTO(LEARN);
@@ -214,7 +210,6 @@ APPLICATION {
 					   MIDI_COMMAND(midi) == MIDI_NOTE_OFF) {
 					uint16_t channel = (uint16_t) (1 << MIDI_CHANNEL(midi));
 					uint8_t note = (uint8_t) MIDI_DATA0(midi);
-					range = false;
 					noteMin = note;
 					noteMax = note;
 					channelMask = channel;
@@ -227,7 +222,7 @@ APPLICATION {
 				}
 				break;
 
-			EVENT(APP_BUTTON_BOOT_DOWN):
+			EVENT(APP_BUTTON_BOOT_UP):
 				config_store();
 				SWITCHTO(NORMAL);
 
@@ -238,7 +233,6 @@ APPLICATION {
 	LEARN:
 	STATE_BEGIN
 			ENTER:
-				led_set(LED_BLUE, true);
 				break;
 
 			EVENT_TRACK_CONNECTION_CHANGE
@@ -252,9 +246,6 @@ APPLICATION {
 					if ((channel & channelMask) == 0) {
 						channelMask |=
 							channel;
-						range = true;
-						led_set(LED_PURPLE,
-							true);
 					}
 					process_midi_thru(midi);
 				} else if (MIDI_COMMAND(midi) == MIDI_NOTE_ON ||
@@ -265,9 +256,6 @@ APPLICATION {
 					    (note < noteMin || note > noteMax)) {
 						noteMin = min(noteMin, note);
 						noteMax = max(noteMax, note);
-						range = true;
-						led_set(LED_PURPLE,
-							true);
 					}
 					if (operation_mode == OPERATION_SYNTH) {
 						process_synth(midi);
@@ -278,7 +266,7 @@ APPLICATION {
 				break;
 
 
-			EVENT(APP_BUTTON_BOOT_DOWN):
+			EVENT(APP_BUTTON_BOOT_UP):
 				if (operation_mode == OPERATION_SYNTH && noteMin == noteMax) {
 					// Expand note range for synth
 					noteMin = 0;
@@ -402,3 +390,12 @@ void config_store() {
 	}
 }
 
+void set_i2c_pullups(bool on) {
+	GPIO_InitTypeDef GPIO_InitStruct;
+	GPIO_InitStruct.Pin = SDA_Pin | SCL_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
+	GPIO_InitStruct.Pull = on ? GPIO_PULLUP : GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+	GPIO_InitStruct.Alternate = GPIO_AF1_I2C1;
+	HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
+}
