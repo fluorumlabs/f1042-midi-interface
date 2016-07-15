@@ -112,7 +112,6 @@ APPLICATION {
 	STATE_BEGIN
 			ENTER:
 				led_set(LED_RED, false);
-				led_blink(LED_BLUE, true, true);
 				if (usb_connected && !bus_connected) {
 					// Reset I2C and go master
 					i2c_abort(&hi2c1);

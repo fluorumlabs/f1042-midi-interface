@@ -474,25 +474,6 @@ static void SystemClockConfig_Resume(void) {
 }
 /* USER CODE END 5 */
 
-/**
-* @brief Software Device Connection
-* @param hpcd: PCD handle
-* @param state: connection state (0 : disconnected / 1: connected)
-* @retval None
-*/
-void HAL_PCDEx_SetConnectionState(PCD_HandleTypeDef *hpcd, uint8_t state) {
-/* USER CODE BEGIN 6 */
-	if (state == 1) {
-		/* Configure Low Connection State */
-
-	}
-	else {
-		/* Configure High Connection State */
-
-	}
-/* USER CODE END 6 */
-}
-
 #ifdef REPLACE_PCD_WritePMA
 
 #pragma strong PCD_WritePMA

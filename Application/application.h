@@ -15,6 +15,7 @@ enum operation_mode_e {
 };
 
 enum app_custom_event_e {
+    APP_BUTTON_BOOT_UP = 0x01000000,
     APP_BUTTON_BOOT_DOWN = 0x02000000,
     APP_EVENT_CONNECTION_STATUS_CHANGE = 0x03000000,          // connected/disconnected
     APP_EVENT_MIDI = 0x04000000                // MIDI command received

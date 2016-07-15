@@ -33,14 +33,14 @@ extern struct usb_endpoint_s _usb_endpoints[TOTAL_ENDPOINTS][2];
 extern struct usb_string_descriptor_s _usb_strings[];
 extern usb_descriptor_t _usb_descriptor;
 
-extern usb_descriptor_t _usb_configuration_descriptor;
-extern uint16_t _usb_configuration_size;
+extern const usb_descriptor_t _usb_configuration_descriptor;
+extern const uint16_t _usb_configuration_size;
 
 usb_descriptor_t _usb_langid = {USB_LANGID()};
 
 void desc_init() {
 	unsigned int csize = _usb_configuration_size;
-	uint8_t *configuration = _usb_configuration_descriptor;
+	uint8_t const *configuration = _usb_configuration_descriptor;
 
 	unsigned int i = 0;
 

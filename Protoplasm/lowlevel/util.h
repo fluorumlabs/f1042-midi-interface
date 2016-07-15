@@ -116,55 +116,6 @@ static inline uint64_t div64(register uint64_t n, register uint32_t d) {
 */
 void memcpy_volatile(volatile void *dst, void *src, size_t len);
 
-/**
-	Calculate CRC32 checksum of memory block.
-
-	@param [in] crc Initial CRC32 value (seed).
-	@param [in] buf Pointer to data for which checksum should be computed.
-	@param [in] size Size of data for which checksum should be computed.
-
-	@return CRC32 checksum for specified block.
-*/
-uint32_t crc32(uint32_t crc, const volatile void *buf, size_t size);
-
-/**
-	Convert an integer to string.
-
-	@param [in] value Integer value.
-	@param [in,out] buffer String buffer to receive converted value.
-	@param [in] n Size of buffer.
-*/
-void int2str(int value, char *buffer, unsigned int n);
-
-/**
-	Parse string to integer.
-
-	@param [in] buffer Pointer to string to convert.
-	@param [in] n Length of string buffer.
-	@param [out] error Parsing error indicator.
-	@return Converted value or error if there was an error.
-*/
-int str2int(const char *buffer, unsigned int n, bool *error);
-
-/**
-	Convert an integer to string (hexadecimal representation).
-
-	@param [in] value Integer value.
-	@param [in,out] buffer String buffer to receive converted value.
-	@param [in] n Size of buffer.
-*/
-void int2hex(int value, char *buffer, unsigned int n);
-
-/**
-	Parse string (hexadecimal representation) to integer.
-
-	@param [in] buffer Pointer to string to convert.
-	@param [in] n Length of string buffer.
-	@param [out] error Parsing error indicator.
-	@return Converted value or error if there was an error.
-*/
-int hex2int(const char *buffer, unsigned int n, bool *error);
-
 /// @}
 
 #endif // UTIL_H

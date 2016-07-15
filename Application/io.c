@@ -10,11 +10,12 @@
 #include "application.h"
 
 extern TIM_HandleTypeDef htim1;
+extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 
 // Internal
-long _buttonTimestamp = 0;
 bool _buttonState = false;
+bool _debounceButtonState = false;
 
 int _blinkCount = 0;
 int _blinkDuration = 0;
@@ -60,12 +61,9 @@ void gpio_blink(enum gpio_e led) {
  */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	if (GPIO_Pin == BOOT_Pin) {
-		bool newState = (HAL_GPIO_ReadPin(BOOT_GPIO_Port, BOOT_Pin) == GPIO_PIN_SET);
-		long now = HAL_GetTick();
-		if (newState && now - _buttonTimestamp > DEBOUNCE_DELAY_TICKS) {
-			app_pushevent(APP_BUTTON_BOOT_DOWN);
-			_buttonTimestamp = now;
-		}
+		_debounceButtonState = (HAL_GPIO_ReadPin(BOOT_GPIO_Port, BOOT_Pin) == GPIO_PIN_SET);
+		HAL_TIM_Base_Stop_IT(&htim2);
+		HAL_TIM_Base_Start_IT(&htim2);
 	}
 }
 
@@ -81,6 +79,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 			} else {
 				HAL_GPIO_TogglePin(GPIOA, _led);
 			}
+		}
+	}
+	if (htim == &htim2) {
+		if (_debounceButtonState != _buttonState) {
+			_buttonState = _debounceButtonState;
+			app_pushevent(_buttonState ? APP_BUTTON_BOOT_DOWN : APP_BUTTON_BOOT_UP);
+			HAL_TIM_Base_Stop_IT(&htim2);
 		}
 	}
 	if (htim == &htim3) {

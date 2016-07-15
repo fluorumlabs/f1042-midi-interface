@@ -219,7 +219,7 @@ enum null_e {
 
 	@see return_nonnull
 */
-#define nonnull(...) __attribute__((nonnull( VA_ARGS )))
+#define nonnull(...) __attribute__((nonnull( __VA_ARGS__ )))
 
 /**
 	Specifies that function return value should be a non-null pointer.
